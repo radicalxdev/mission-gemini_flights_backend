@@ -53,10 +53,10 @@ class FlightInput(BaseModel):
     date: date
 
 class FlightSearchCriteria(BaseModel):
-    origin: Optional[str] = None
-    destination: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    origin: str
+    destination: str
+    start_date: date
+    end_date: date
     flight_number: Optional[str] = None
     airline: Optional[str] = None
     start_time: Optional[time] = None

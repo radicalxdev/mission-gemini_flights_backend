@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import logging
 
 from services.flight_manager import generate_flights, search_flights, book_flight
@@ -31,5 +31,5 @@ def read_all_flights(db: Session = Depends(models.get_db)):
     return flights
 
 @app.get("/search-flights/")
-def search_flights_endpoint(criteria: models.FlightSearchCriteria = Depends(), db: Session = Depends(models.get_db)):
-    return search_flights(criteria, db)
+def search_flights_endpoint(criteria: models.FlightSearchCriteria = Depends(), page: Optional[int] = 1, page_size: Optional[int] = 10, db: Session = Depends(models.get_db)):
+    return search_flights(criteria, db, page, page_size)
