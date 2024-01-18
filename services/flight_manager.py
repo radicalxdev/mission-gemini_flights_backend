@@ -1,5 +1,6 @@
 import random
-from datetime import datetime, timedelta, time
+import requests
+from datetime import datetime, timedelta, time, date
 from typing import Optional
 from fastapi import Depends
 from sqlalchemy import and_
@@ -71,34 +72,43 @@ def generate_flights(flight_input, num_flights, db: Session):
         
     return flights
 
-def search_flights(criteria, db: Session, page: Optional[int] = 1, page_size: Optional[int] = 10):
+def handle_flight_search(criteria, db: Session, page: Optional[int] = 1, page_size: Optional[int] = 10):
     """
     Searches for flights based on various criteria and implements pagination.
 
-    This function searches the database for flights that match the provided criteria. 
-    It supports filtering by origin, destination, date range, flight number, airline, 
-    departure time range, and seat type with cost range. Pagination is employed to efficiently handle 
-    large datasets, returning a controlled subset of results based on the specified page number and page size.
+    This function searches the database for flights matching specified criteria. It supports filtering by various parameters, including mandatory ones like origin, destination, and date range, and optional ones like flight number, airline, departure time range, seat type, and cost range. Pagination is used to manage large datasets, returning a controlled subset of results based on the specified page number and page size.
 
-    If the requested page number exceeds the total number of available pages or if there are no 
-    flights matching the criteria, appropriate messages are returned.
+    If the requested page number exceeds the total number of available pages, or if no flights match the criteria, appropriate messages are returned.
 
     Parameters:
-    - criteria: An object containing various fields to filter the flights.
-    - db (Session): SQLAlchemy database session for executing queries.
-    - page (Optional[int]): The current page number for pagination (default is 1).
-    - page_size (Optional[int]): The number of records to return per page (default is 10).
+    - criteria (FlightSearchCriteria): An object containing fields to filter the flights. This includes:
+        - origin (str): The starting airport/location of the flight.
+        - destination (str): The destination airport/location of the flight.
+        - start_date (date): The earliest departure date for the flight.
+        - end_date (date): The latest departure date for the flight.
+        - flight_number (Optional[str]): Specific flight number to search for (default is None).
+        - airline (Optional[str]): Specific airline to search for (default is None).
+        - start_time (Optional[time]): The earliest departure time range (default is None).
+        - end_time (Optional[time]): The latest departure time range (default is None).
+        - seat_type (Optional[str]): Type of seat, e.g., 'economy', 'business', 'first_class' (default is None).
+        - min_cost (Optional[int]): Minimum cost of the flight ticket (default is None).
+        - max_cost (Optional[int]): Maximum cost of the flight ticket (default is None).
+    - db (Session): SQLAlchemy database session for executing queries. Required for database access.
+    - page (Optional[int]): The current page number for pagination. Defaults to 1 if not specified.
+    - page_size (Optional[int]): The number of records to return per page. Defaults to 10 if not specified.
 
     Returns:
     A dictionary containing:
-    - 'query_results': The number of flights found for the current page, or '0' if no flights were found or if the requested page number exceeds total pages.
-    - 'flights': A list of flights (as Pydantic models) that match the criteria for the current page, or an empty list in cases where no flights are found or the page number is out of range.
-    - 'page': The current page number.
-    - 'total_pages': The total number of pages available based on the total count of records matching the search criteria.
-    - 'message': An optional field that provides additional information in cases where no flights are found or the requested page is out of range.
+    - 'query_results': Number of flights found for the current page, or '0' if no flights match or the page number exceeds total pages.
+    - 'flights': List of flights (as Pydantic models) that match the criteria for the current page. An empty list is returned if no flights are found or if the page number is out of range.
+    - 'page': Current page number.
+    - 'total_pages': Total number of pages available, based on the total count of records matching the search criteria.
+    - 'message': Optional field providing additional information in cases where no flights are found or the requested page is out of range.
+
     """
     
     query = db.query(Flight)
+    
     # Convert the start and end dates to datetime objects
     start_datetime = datetime.combine(criteria.start_date, time.min)
     end_datetime = datetime.combine(criteria.end_date, time.max)
@@ -170,7 +180,7 @@ def search_flights(criteria, db: Session, page: Optional[int] = 1, page_size: Op
         "total_pages": total_pages
     }
 
-def book_flight(flight_id: int, seat_type: str, num_seats: int = 1, db: Session = Depends(get_db)):
+def handle_flight_book(flight_id: int, seat_type: str, num_seats: int = 1, db: Session = Depends(get_db)):
     """
     Books a specified number of seats on a flight.
 
@@ -224,3 +234,24 @@ def book_flight(flight_id: int, seat_type: str, num_seats: int = 1, db: Session 
     # Return a success message
     return {"message": success_message, "flight_info": flight}
 
+def search_flights(origin: str, destination: str, start_date: date, end_date: date):
+    """
+    Sends a GET request to a FastAPI endpoint to search for flights.
+
+    Parameters:
+    - origin (str): The starting airport/location of the flight.
+    - destination (str): The destination airport/location of the flight.
+    - start_date (date): The departure date for the flight.
+    - end_date (date): The return date for the flight.
+
+    Returns:
+    The response from the FastAPI endpoint as a JSON object.
+    """
+    # Constructing the URL with query parameters
+    url = f"http://127.0.0.1:8000/search-flights/?origin={origin}&destination={destination}&start_date={start_date}&end_date={end_date}&page=1&page_size=10"
+
+    # Making the GET request
+    response = requests.get(url, headers={'accept': 'application/json'})
+
+    # Returning the JSON response
+    return response.json()
