@@ -16,9 +16,11 @@ class Flight(Base):
     airline = Column(String)
     origin = Column(String)
     destination = Column(String)
+    
+    departure_date = Column(Date)
+    arrival_date = Column(Date)
     departure_time = Column(DateTime)
     arrival_time = Column(DateTime)
-    date = Column(Date)
     
     open_seats_economy = Column(Integer)
     open_seats_business = Column(Integer)
@@ -34,9 +36,12 @@ class FlightModel(BaseModel):
     airline: str
     origin: str
     destination: str
+    
+    departure_date: date
+    arrival_date: date
     departure_time: datetime
     arrival_time: datetime
-    date: datetime
+    
     open_seats_economy: int
     open_seats_business: int
     open_seats_first_class: int
@@ -50,17 +55,17 @@ class FlightModel(BaseModel):
 class FlightInput(BaseModel):
     origin: str
     destination: str
-    date: date
+    departure_date: date
 
 class FlightSearchCriteria(BaseModel):
     origin: str
     destination: str
-    start_date: date
-    end_date: date
+    departure_date: date
+    arrival_date: Optional[str] = None
     flight_number: Optional[str] = None
     airline: Optional[str] = None
-    start_time: Optional[time] = None
-    end_time: Optional[time] = None
+    departure_time: Optional[time] = None
+    arrival_time: Optional[time] = None
     seat_type: Optional[str] = None  # 'economy', 'business', 'first_class'
     min_cost: Optional[int] = None
     max_cost: Optional[int] = None

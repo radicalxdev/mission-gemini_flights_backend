@@ -1,11 +1,12 @@
 import random
 import requests
 from datetime import datetime, timedelta, time, date
+from dateutil.parser import parse
 from typing import Optional
-from fastapi import Depends
-from sqlalchemy import and_
+from fastapi import Depends, HTTPException
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
-from models import Flight, FlightModel, get_db
+from models import Flight, FlightModel, FlightSearchCriteria, get_db
 import logging
 
 # Create a logger for this module
@@ -31,7 +32,10 @@ def calculate_times(origin, destination, flight_date):
     duration = timedelta(minutes=random.randint(30, 600))
     arrival_time = departure_time + duration
 
-    return departure_time, arrival_time
+    # Extracting the arrival date
+    arrival_date = arrival_time.date()
+
+    return departure_time, arrival_time, arrival_date
 
 def generate_flights(flight_input, num_flights, db: Session):
     flights = []
@@ -39,7 +43,7 @@ def generate_flights(flight_input, num_flights, db: Session):
     for _ in range(num_flights):
         flight_number = generate_flight_number()
         airline = choose_airline()
-        departure_time, arrival_time = calculate_times(flight_input.origin, flight_input.destination, flight_input.date)
+        departure_time, arrival_time, arrival_date= calculate_times(flight_input.origin, flight_input.destination, flight_input.departure_date)
         
         open_seats_economy = random.randint(0, 200)  
         open_seats_business = random.randint(0, 50)
@@ -50,19 +54,22 @@ def generate_flights(flight_input, num_flights, db: Session):
         first_class_cost = random.randint(1500, 3000)
 
         new_flight = Flight(
-            flight_number=flight_number,
-            airline=airline,
-            origin=flight_input.origin,
-            destination=flight_input.destination,
-            departure_time=departure_time,
-            arrival_time=arrival_time,
-            date=flight_input.date,
-            open_seats_economy=open_seats_economy,
-            open_seats_business=open_seats_business,
-            open_seats_first_class=open_seats_first_class,
-            economy_seat_cost=economy_seat_cost,
-            business_seat_cost=business_seat_cost,
-            first_class_cost=first_class_cost
+            flight_number =             flight_number,
+            airline =                   airline,
+            origin =                    flight_input.origin,
+            destination =               flight_input.destination,
+            
+            departure_date =            flight_input.departure_date,
+            arrival_date =              arrival_date,
+            departure_time =            departure_time,
+            arrival_time =              arrival_time,
+            
+            open_seats_economy =        open_seats_economy,
+            open_seats_business =       open_seats_business,
+            open_seats_first_class =    open_seats_first_class,
+            economy_seat_cost =         economy_seat_cost,
+            business_seat_cost =        business_seat_cost,
+            first_class_cost =          first_class_cost
         )
 
         db.add(new_flight)
@@ -74,60 +81,63 @@ def generate_flights(flight_input, num_flights, db: Session):
 
 def handle_flight_search(criteria, db: Session, page: Optional[int] = 1, page_size: Optional[int] = 10):
     """
-    Searches for flights based on various criteria and implements pagination.
-
-    This function searches the database for flights matching specified criteria. It supports filtering by various parameters, including mandatory ones like origin, destination, and date range, and optional ones like flight number, airline, departure time range, seat type, and cost range. Pagination is used to manage large datasets, returning a controlled subset of results based on the specified page number and page size.
-
-    If the requested page number exceeds the total number of available pages, or if no flights match the criteria, appropriate messages are returned.
+    Handles the search for flights based on various criteria. The function applies filters for
+    origin, destination, departure date, and optionally arrival date, flight number, airline, 
+    time range, and seat type with cost constraints.
 
     Parameters:
-    - criteria (FlightSearchCriteria): An object containing fields to filter the flights. This includes:
-        - origin (str): The starting airport/location of the flight.
-        - destination (str): The destination airport/location of the flight.
-        - start_date (date): The earliest departure date for the flight.
-        - end_date (date): The latest departure date for the flight.
-        - flight_number (Optional[str]): Specific flight number to search for (default is None).
-        - airline (Optional[str]): Specific airline to search for (default is None).
-        - start_time (Optional[time]): The earliest departure time range (default is None).
-        - end_time (Optional[time]): The latest departure time range (default is None).
-        - seat_type (Optional[str]): Type of seat, e.g., 'economy', 'business', 'first_class' (default is None).
-        - min_cost (Optional[int]): Minimum cost of the flight ticket (default is None).
-        - max_cost (Optional[int]): Maximum cost of the flight ticket (default is None).
-    - db (Session): SQLAlchemy database session for executing queries. Required for database access.
-    - page (Optional[int]): The current page number for pagination. Defaults to 1 if not specified.
-    - page_size (Optional[int]): The number of records to return per page. Defaults to 10 if not specified.
+    - criteria: An object containing the search criteria, including origin, destination, 
+      departure date, optional arrival date, flight number, airline, departure time, arrival time, 
+      seat type, minimum and maximum cost.
+    - db (Session): The database session used to execute the query.
+    - page (Optional[int]): The page number for pagination, default is 1.
+    - page_size (Optional[int]): The number of records per page for pagination, default is 10.
+
+    The function first builds a query with basic filters such as origin, destination, and departure date. 
+    Additional filters for arrival date, flight number, airline, time range, and seat type with cost 
+    constraints are applied if provided in the criteria. The function handles parsing of date and time 
+    strings and validates them. In case of invalid arrival date format, it logs an error and returns 
+    an HTTP exception. 
+
+    The function also handles pagination, calculating the total number of matching records and total pages.
+    It checks if the requested page exceeds the total number of available pages and handles this scenario 
+    by returning an appropriate message. Finally, it fetches the flights based on the applied filters and 
+    pagination, converts the SQLAlchemy models to Pydantic models, and returns the search results.
 
     Returns:
-    A dictionary containing:
-    - 'query_results': Number of flights found for the current page, or '0' if no flights match or the page number exceeds total pages.
-    - 'flights': List of flights (as Pydantic models) that match the criteria for the current page. An empty list is returned if no flights are found or if the page number is out of range.
-    - 'page': Current page number.
-    - 'total_pages': Total number of pages available, based on the total count of records matching the search criteria.
-    - 'message': Optional field providing additional information in cases where no flights are found or the requested page is out of range.
-
+    A dictionary containing the number of query results, a list of flight models, the current page, and 
+    total number of pages.
     """
-    
     query = db.query(Flight)
     
-    # Convert the start and end dates to datetime objects
-    start_datetime = datetime.combine(criteria.start_date, time.min)
-    end_datetime = datetime.combine(criteria.end_date, time.max)
+    departure_datetime = datetime.combine(criteria.departure_date, time.min)
 
-    # Apply a filter using departure_time field
+    # Start building the query with basic filters
     query = query.filter(
-        Flight.departure_time >= start_datetime,
-        Flight.departure_time <= end_datetime,
         Flight.origin == criteria.origin,
         Flight.destination == criteria.destination
     )
+
+    # Additional handling for departure date
+    query = query.filter(Flight.departure_time >= departure_datetime)
+
+    # Additional handling for arrival date if it's provided
+    if criteria.arrival_date:
+        try:
+            arrival_date = parse(criteria.arrival_date).date()
+            arrival_datetime = datetime.combine(arrival_date, time.max)
+            query = query.filter(Flight.departure_time <= arrival_datetime)
+        except ValueError:
+            logging.error("Arrival date present but invalid as data type")
+            return HTTPException(500, "Arrival date present but invalid as data type")
 
     # Flight Extra Filters
     if criteria.flight_number:
         query = query.filter(Flight.flight_number == criteria.flight_number)
     if criteria.airline:
         query = query.filter(Flight.airline == criteria.airline)
-    if criteria.start_time and criteria.end_time:
-        query = query.filter(Flight.departure_time.between(criteria.start_time, criteria.end_time))
+    if criteria.departure_time and criteria.arrival_time:
+        query = query.filter(Flight.departure_time.between(criteria.departure_time, criteria.arrival_time))
     if criteria.seat_type:
         min_cost = int(criteria.min_cost) if criteria.min_cost is not None else 0
         max_cost = int(criteria.max_cost) if criteria.max_cost is not None else float('inf')
@@ -234,21 +244,41 @@ def handle_flight_book(flight_id: int, seat_type: str, num_seats: int = 1, db: S
     # Return a success message
     return {"message": success_message, "flight_info": flight}
 
-def search_flights(origin: str, destination: str, start_date: date, end_date: date):
+def search_flights(**params):
     """
-    Sends a GET request to a FastAPI endpoint to search for flights.
+    Sends a GET request to a FastAPI endpoint to search for flights based on various criteria.
 
     Parameters:
-    - origin (str): The starting airport/location of the flight.
-    - destination (str): The destination airport/location of the flight.
-    - start_date (date): The departure date for the flight.
-    - end_date (date): The return date for the flight.
+    - criteria (FlightSearchCriteria): An object containing the search criteria.
 
     Returns:
     The response from the FastAPI endpoint as a JSON object.
     """
+    # Create an instance of FlightSearchCriteria from the passed arguments
+    criteria = FlightSearchCriteria(**params)
+    
     # Constructing the URL with query parameters
-    url = f"http://127.0.0.1:8000/search-flights/?origin={origin}&destination={destination}&start_date={start_date}&end_date={end_date}&page=1&page_size=10"
+    url = f"http://127.0.0.1:8000/search-flights/?origin={criteria.origin}&destination={criteria.destination}&departure_date={criteria.departure_date}"
+
+    # Adding optional parameters to the URL
+    if criteria.arrival_date:
+        url += f"&arrival_date={criteria.arrival_date}"
+    if criteria.flight_number:
+        url += f"&flight_number={criteria.flight_number}"
+    if criteria.airline:
+        url += f"&airline={criteria.airline}"
+    if criteria.departure_time:
+        url += f"&departure_time={criteria.departure_time}"
+    if criteria.arrival_time:
+        url += f"&arrival_time={criteria.arrival_time}"
+    if criteria.seat_type:
+        url += f"&seat_type={criteria.seat_type}"
+    if criteria.min_cost is not None:
+        url += f"&min_cost={criteria.min_cost}"
+    if criteria.max_cost is not None:
+        url += f"&max_cost={criteria.max_cost}"
+
+    url += "&page=1&page_size=10"
 
     # Making the GET request
     response = requests.get(url, headers={'accept': 'application/json'})
