@@ -4,7 +4,7 @@ from vertexai.preview import generative_models
 from vertexai.preview.generative_models import GenerativeModel, Tool, Part, Content, ChatSession
 from services.flight_manager import search_flights
 
-project = "gemini-flights-413603"
+project = "sample-gemini"
 vertexai.init(project = project)
 
 # Define Tool
