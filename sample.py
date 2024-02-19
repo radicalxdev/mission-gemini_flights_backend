@@ -105,7 +105,13 @@ def handle_response(response):
         elif function_name == "get_book_flights":
             results = book_flights(**function_params)
             if results:
-                return "Booking successful!"
+                intermediate_response = chat.send_message(
+                    Part.from_function_response(
+                        name="get_book_flights",
+                        response = results
+                    )
+                )
+                return intermediate_response.candidates[0].content.parts[0].text
             else:
                 return "Booking Failed"
     else:
