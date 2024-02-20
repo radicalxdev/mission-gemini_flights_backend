@@ -56,6 +56,7 @@ class FlightInput(BaseModel):
     origin: str
     destination: str
     departure_date: date
+    # Should i add FlightBookCriteria ??
 
 class FlightSearchCriteria(BaseModel):
     origin: str

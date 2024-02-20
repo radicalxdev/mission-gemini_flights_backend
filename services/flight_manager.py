@@ -134,6 +134,7 @@ def handle_flight_search(criteria, db: Session, page: Optional[int] = 1, page_si
     # Flight Extra Filters
     if criteria.flight_number:
         query = query.filter(Flight.flight_number == criteria.flight_number)
+        
     if criteria.airline:
         query = query.filter(Flight.airline == criteria.airline)
     if criteria.departure_time and criteria.arrival_time:
@@ -181,7 +182,7 @@ def handle_flight_search(criteria, db: Session, page: Optional[int] = 1, page_si
 
     # Convert SQLAlchemy models to Pydantic models
     flight_models = [FlightModel.from_orm(flight) for flight in flights]
-
+  
     # Return the query results
     return {
         "query_results": len(flight_models),
@@ -282,13 +283,14 @@ def search_flights(**params):
 
     # Making the GET request
     response = requests.get(url, headers={'accept': 'application/json'})
-
+    print(response.json())
     # Returning the JSON response
     return response.json()
 
 def book_flights(**params):
     criteria = FlightBookCriteria(**params)
-    url = f"http://127.0.0.1:8000/book-flights/?flight_id={criteria.flight_id}&num_seats={criteria.num_seats}&seat_type={criteria.seat_type}"    
+    url = f"http://127.0.0.1:8000/book_flight/?flight_id={criteria.flight_id}&num_seats={criteria.num_seats}&seat_type={criteria.seat_type}"    
     url += '&page=1&page_size=10'
-    response = requests.post(url , json = params , headers = {'accept' : 'application/json'})
+    response = requests.post(url , json = params , headers={'accept': 'application/json'} ) 
+    print(response.json())
     return response.json()

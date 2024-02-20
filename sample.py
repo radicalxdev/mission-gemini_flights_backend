@@ -43,7 +43,7 @@ get_book_flights = generative_models.FunctionDeclaration(
         "properties": {
             "flight_id": {
                 "type": "integer",
-                "description": "The flight number is given by the user."
+                "description": "The flight id is given by the user."
             },
             "seat_type": {
                 "type": "string",
