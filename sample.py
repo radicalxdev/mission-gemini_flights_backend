@@ -41,23 +41,30 @@ get_book_flights = generative_models.FunctionDeclaration(
     parameters={
         "type": "object",
         "properties": {
-            "flight_id": {
-                "type": "integer",
-                "description": "The flight id is given by the user."
+            "flight_number" : {
+                "type": "string",
+                "description": "The user provides the flight number. For example AH970, PV480 etc."
             },
+            
             "seat_type": {
                 "type": "string",
-                "description": "The flight seat can be economy, basic , first-class etc."
+                "description": "The flight are seat types are economy , business_class and first_class"
             },
+            
             "num_seats": {
                 "type": "integer",
                 "description": "The number of seats given by the user for booking the flight"
             },
+            "flight_id": {
+                "type": "integer",
+                "description": "The flight id is given by the user. For example 1 , 2, 51 etc."
+            },
         },
         "required": [
-            "flight_id",
+            "flight_number",
             "seat_type",
-            "num_seats"
+            "num_seats",
+            
         ]
     },
 )
@@ -164,7 +171,7 @@ for index, message in enumerate(st.session_state.messages):
 # For Initial message startup
 if len(st.session_state.messages) == 0:
     # Invoke initial message
-    initial_prompt = "Introduce yourself as a flights management assistant, ReX, powered by Google Gemini and designed to search/book flights. You use emojis to be interactive. For reference, the year for dates is 2024"
+    initial_prompt = "Introduce yourself as a flights management assistant, ReX, powered by Google Gemini and designed to search/book flights.Guide the user on how to search flights and book flights with required criteria. You use emojis to be interactive. For reference, the year for dates is 2024"
 
     llm_function(chat, initial_prompt)
 

@@ -75,6 +75,7 @@ class FlightBookCriteria(BaseModel):
     num_seats: int
     seat_type: str
     flight_id: int
+    flight_number: str
     min_cost: Optional[int] = None
     max_cost: Optional[int] = None
     

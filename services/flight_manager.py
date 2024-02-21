@@ -182,6 +182,9 @@ def handle_flight_search(criteria, db: Session, page: Optional[int] = 1, page_si
 
     # Convert SQLAlchemy models to Pydantic models
     flight_models = [FlightModel.from_orm(flight) for flight in flights]
+    
+    # #Chatgpt
+    # flight_models = [FlightModel.from_orm(flight).dict() | {"flight_id": flight.id} for flight in flights]
   
     # Return the query results
     return {
@@ -191,7 +194,7 @@ def handle_flight_search(criteria, db: Session, page: Optional[int] = 1, page_si
         "total_pages": total_pages
     }
 
-def handle_flight_book(flight_id: int, seat_type: str, num_seats: int = 1, db: Session = Depends(get_db)):
+def handle_flight_book(flight_number:str, seat_type: str , num_seats: int = 1, flight_id: int = None, db: Session = Depends(get_db)):
     """
     Books a specified number of seats on a flight.
 
@@ -202,6 +205,7 @@ def handle_flight_book(flight_id: int, seat_type: str, num_seats: int = 1, db: S
 
     Parameters:
     - flight_id (int): The unique identifier of the flight to book.
+    - flight_number (str) : The Flight number of the flight to book.
     - seat_type (str): The class of the seat to book (economy, business, or first_class).
     - num_seats (int, optional): The number of seats to book (default is 1).
     - db (Session, default Depends(get_db)): SQLAlchemy database session for executing queries.
@@ -215,7 +219,11 @@ def handle_flight_book(flight_id: int, seat_type: str, num_seats: int = 1, db: S
     it returns a 'Flight not found.' message.
     """
     # Retrieve the flight from the database
-    flight = db.query(Flight).filter(Flight.flight_id == flight_id).first()
+    if flight_id:
+        flight = db.query(Flight).filter(Flight.flight_id == flight_id ).first()
+    else:
+        flight = db.query(Flight).filter(Flight.flight_number == flight_number).first()
+        
 
     if not flight:
         return "Flight not found."
@@ -240,7 +248,7 @@ def handle_flight_book(flight_id: int, seat_type: str, num_seats: int = 1, db: S
     # Commit the booking to the database
     db.commit()
     
-    success_message = f"Successfully booked {num_seats} {seat_type} seat(s) on {flight.airline} flight on {flight.departure_date} from {flight.origin} to {flight.destination}. Total cost: ${total_cost}."
+    success_message = f"Successfully booked {num_seats} {seat_type} seat(s) on {flight.airline} {flight.flight_number}flight on {flight.departure_date} from {flight.origin} to {flight.destination}. Total cost: ${total_cost}."
 
     # Return a success message
     return {"message": success_message, "flight_info": flight}
@@ -289,7 +297,7 @@ def search_flights(**params):
 
 def book_flights(**params):
     criteria = FlightBookCriteria(**params)
-    url = f"http://127.0.0.1:8000/book_flight/?flight_id={criteria.flight_id}&num_seats={criteria.num_seats}&seat_type={criteria.seat_type}"    
+    url = f"http://127.0.0.1:8000/book_flight/?flight_number={criteria.flight_number}&num_seats={criteria.num_seats}&seat_type={criteria.seat_type}&flight_id={criteria.flight_id}"    
     url += '&page=1&page_size=10'
     response = requests.post(url , json = params , headers={'accept': 'application/json'} ) 
     print(response.json())
