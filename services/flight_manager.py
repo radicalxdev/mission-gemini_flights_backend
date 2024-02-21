@@ -239,7 +239,7 @@ def handle_flight_book(flight_id: int, seat_type: str, num_seats: int = 1, db: S
     # Commit the booking to the database
     db.commit()
     
-    success_message = f"Successfully booked {num_seats} {seat_type} seat(s) on {flight.airline} flight on {flight.date} from {flight.origin} to {flight.destination}. Total cost: ${total_cost}."
+    success_message = f"Successfully booked {num_seats} {seat_type} seat(s) on {flight.airline} flight on {flight.departure_date} from {flight.origin} to {flight.destination}. Total cost: ${total_cost}."
 
     # Return a success message
     return {"message": success_message, "flight_info": flight}
