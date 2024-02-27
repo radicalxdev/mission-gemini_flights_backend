@@ -48,7 +48,13 @@ pip install -r requirements.txt
 
 ## Starting the FastAPI Server
 
+<<<<<<< HEAD
 After the installation, you can start the FastAPI server using Uvicorn. Navigate to the project directory and run:
+=======
+## Acknowledgements
+I wanna express my gratitude towards RadicalX Community, especially Talha Sabri and Mikhail Ocampo () for providing me the opportunity to learn and build Gemini flights.
+ ![image](https://github.com/AnikethRai/Gemini_Explorer/assets/95706188/7fec3346-20fe-4566-8a32-4ca49de2ea83)
+>>>>>>> parent of 7a9b707 (Update README.md)
 
 ```bash
 uvicorn main:app
