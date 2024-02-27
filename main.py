@@ -18,9 +18,9 @@ def generate_flight(flight_input: models.FlightInput, num_flights: int, db: Sess
     return generate_flights(flight_input, num_flights, db)
 
 @app.post("/book_flight")
-def book_flight_endpoint(flight_number: str, seat_type: str, num_seats: int = 1,flight_id: int = None, db: Session = Depends(models.get_db)):
+def book_flight_endpoint( seat_type: str, num_seats: int = 1,flight_number: str = '', flight_id: int = None, db: Session = Depends(models.get_db)):
     try:
-        result = handle_flight_book(flight_number , seat_type, num_seats, flight_id, db)
+        result = handle_flight_book( seat_type, num_seats, flight_number , flight_id, db)
         return {"message": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

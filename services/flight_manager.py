@@ -194,7 +194,7 @@ def handle_flight_search(criteria, db: Session, page: Optional[int] = 1, page_si
         "total_pages": total_pages
     }
 
-def handle_flight_book(flight_number:str, seat_type: str , num_seats: int = 1, flight_id: int = None, db: Session = Depends(get_db)):
+def handle_flight_book( seat_type: str , num_seats: int = 1, flight_number:str = '', flight_id: int = None, db: Session = Depends(get_db)):
     """
     Books a specified number of seats on a flight.
 
@@ -221,9 +221,10 @@ def handle_flight_book(flight_number:str, seat_type: str , num_seats: int = 1, f
     # Retrieve the flight from the database
     if flight_id:
         flight = db.query(Flight).filter(Flight.flight_id == flight_id ).first()
-    else:
+    elif flight_number:
         flight = db.query(Flight).filter(Flight.flight_number == flight_number).first()
-        
+    else:
+        return 'havent provided id or flight number'    
 
     if not flight:
         return "Flight not found."
@@ -299,6 +300,6 @@ def book_flights(**params):
     criteria = FlightBookCriteria(**params)
     url = f"http://127.0.0.1:8000/book_flight/?flight_number={criteria.flight_number}&num_seats={criteria.num_seats}&seat_type={criteria.seat_type}&flight_id={criteria.flight_id}"    
     url += '&page=1&page_size=10'
-    response = requests.post(url , json = params , headers={'accept': 'application/json'} ) 
+    response = requests.post(url , json = params, headers={'accept': 'application/json'} ) 
     print(response.json())
     return response.json()
