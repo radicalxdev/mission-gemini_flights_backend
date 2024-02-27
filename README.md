@@ -23,7 +23,7 @@ Before you begin, ensure you have the following installed on your system:
 - Uvicorn, an ASGI server for FastAPI [Documentation](https://www.uvicorn.org/)
 
 ## Architecture
-<img src = 'https://github.com/AnikethRai/mission-gemini_flights_backend_AR/assets/95706188/de24509b-f0e9-47b3-8fa0-49314c664681' width = 100>
+<img src = 'https://github.com/AnikethRai/mission-gemini_flights_backend_AR/assets/95706188/de24509b-f0e9-47b3-8fa0-49314c664681' width = 500>
 
 ## Table of Contents
 - Task✨ Setting up Google Gemini
