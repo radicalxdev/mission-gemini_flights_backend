@@ -56,6 +56,7 @@ class FlightInput(BaseModel):
     origin: str
     destination: str
     departure_date: date
+    # Should i add FlightBookCriteria ??
 
 class FlightSearchCriteria(BaseModel):
     origin: str
@@ -69,6 +70,15 @@ class FlightSearchCriteria(BaseModel):
     seat_type: Optional[str] = None  # 'economy', 'business', 'first_class'
     min_cost: Optional[int] = None
     max_cost: Optional[int] = None
+    
+class FlightBookCriteria(BaseModel):
+    num_seats: int
+    seat_type: str
+    flight_id: int
+    flight_number: str
+    min_cost: Optional[int] = None
+    max_cost: Optional[int] = None
+    
     
 
 # Create the database
