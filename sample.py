@@ -43,7 +43,7 @@ get_book_flights = generative_models.FunctionDeclaration(
         "properties": {
             "flight_number" : {
                 "type": "string",
-                "description": "The user provides the flight number. For example AH950, PV480 etc. One more example flight AH950 , flight PV480"
+                "description": "The user provides the flight number. For example AH970, PV480 etc."
             },
             
             "seat_type": {
@@ -57,14 +57,13 @@ get_book_flights = generative_models.FunctionDeclaration(
             },
             "flight_id": {
                 "type": "integer",
-                "description" : "The flight id is a number of the flight such as 91, 51, 61, 72 etc. Do not get confused between number of seats and id"
-            }
+                "description": "The flight id is given by the user. For example 1 , 2, 51 etc."
+            },
         },
         "required": [
             "flight_number",
             "seat_type",
             "num_seats",
-            "flight_id"
             
         ]
     },
