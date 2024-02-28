@@ -40,11 +40,43 @@ Before you begin, ensure you have the following installed on your system:
     ![image](https://github.com/AnikethRai/mission-gemini_flights_backend_AR/assets/95706188/c9bd7f75-46ba-4a36-a21d-a3059fd1b104)
 
 ## Task Clone Premade FastAPI Server
-  - Install WSL or Favourite CLI to the local machine on the editor.
-    To install WSL use the following command.
-@@ -79,6 +81,9 @@ Before you begin, ensure you have the following installed on your system:
-      endpoints directly from your browser.
-  - **Test Endpoints**
+- Install WSL or Favourite CLI to the local machine on the editor.
+      To install WSL use the following command.
+      ```bash
+         WSL --install
+      ```
+- **Clone the Repository**
+    Start by cloning the repository to your local machine. Use the following command:
+       ```bash
+       git clone https://github.com/your-username/your-repository.git
+       cd your-repository
+      ```
+-  Set Up a Virtual Environment (Optional but recommended)
+
+    It's a good practice to create a virtual environment for your Python projects. This keeps your project dependencies isolated. If you have `virtualenv` installed, create a new environment with:
+    
+    ```bash
+    virtualenv venv
+    source venv/bin/activate
+    ```
+- Install Dependencies
+  Inside the virtual environment, install all necessary dependencies by running:
+  ```bash
+  pip install -r requirements.txt
+  ```
+- Starting the FastAPI Server
+
+  - After the installation, you can start the FastAPI server using Uvicorn. Navigate to the project directory and run:
+
+    ```bash
+    uvicorn main:app
+    ```
+- Accessing the API
+   - With the server running, you can access the API at `http://127.0.0.1:8000.`
+
+   - For interactive API documentation, visit `http://127.0.0.1:8000/docs`, where you can test the API endpoints directly from your browser.
+    
+- **Test Endpoints**
       -  Try using origin: BOS, Destination: SFO, Date: 2024-01-18 for Searching flights.
     ![image](https://github.com/AnikethRai/mission-gemini_flights_backend_AR/assets/95706188/2b9f95c5-77de-4c18-937d-24f362b060e6)
 
@@ -52,7 +84,16 @@ Before you begin, ensure you have the following installed on your system:
 ##  Task☁️ Google Cloud Developer Initialization
   - Install the Google Cloud SDK: Follow the installation instructions for your operating system here.
   - Open a terminal or command prompt.
-@@ -95,7 +100,92 @@ Before you begin, ensure you have the following installed on your system:
+  - Run the following command to initialize the SDK:
+        ```
+            gcloud init
+        ```
+  - Sign in with your Google Account: Follow the prompts to sign in or create a new account.
+  - Choose a Google Cloud project: Select an existing project or create a new one.
+  - Set the default a: Choose a default compute region and zone.
+  - Confirm your choices: Review your selections and confirm to complete the initialization.
+  - Verify the configuration: Run the following command to verify your configuration: arduinoCopy code
+    ``` gcloud config list ```
   (Optional) Install additional components: Depending on your needs, you may want to install additional components using the gcloud components install command.
   You're now ready to use Gcloud commands to interact with Google Cloud Platform services!
   ![task2](https://github.com/AnikethRai/Gemini_Explorer/assets/95706188/373d51c0-fa38-48b7-a827-ef44c158f45c)
