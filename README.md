@@ -47,6 +47,7 @@ Before you begin, ensure you have the following installed on your system:
    ```
 - **Clone the Repository**
     Start by cloning the repository to your local machine. Use the following command:
+    fork this repo: [Repo](https://github.com/radicalxdev/mission-gemini_flights_backend.git)
   ```bash
        git clone https://github.com/your-username/your-repository.git
        cd your-repository
